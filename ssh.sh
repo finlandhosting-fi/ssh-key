@@ -12,7 +12,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # -----------------------------
-# TARGET USER (CURRENT LOGIN USER)
+# TARGET USER
 # -----------------------------
 TARGET_USER="${SUDO_USER:-root}"
 
@@ -44,7 +44,7 @@ else
 fi
 
 # -----------------------------
-# SSH SETUP
+# SSH DIR SETUP
 # -----------------------------
 HOME_DIR=$(eval echo "~$TARGET_USER")
 
@@ -101,17 +101,24 @@ done
 echo "[+] Added $ADDED key(s)"
 
 # -----------------------------
-# SAFE SSH RESTART (FIXED)
+# SAFE SSH RESTART (REAL FIX)
 # -----------------------------
-echo "[+] Restarting SSH..."
+echo "[+] Testing SSH config..."
 
-# Alma / RHEL / Debian safe approach
-if sshd -t 2>/dev/null; then
-    systemctl restart sshd 2>/dev/null || systemctl restart ssh
-    echo "[+] SSH ready 🔥"
-else
+if ! sshd -t 2>/dev/null; then
     echo "SSH config invalid - NOT restarting"
     exit 1
 fi
 
+echo "[+] Restarting SSH service..."
+
+if systemctl is-active --quiet sshd; then
+    systemctl restart sshd
+elif systemctl is-active --quiet ssh; then
+    systemctl restart ssh
+else
+    systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || true
+fi
+
+echo "[+] SSH ready 🔥"
 echo "[+] Done"
