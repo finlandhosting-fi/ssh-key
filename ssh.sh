@@ -7,12 +7,12 @@ echo "[+] SSH bootstrap starting..."
 # ROOT CHECK
 # -----------------------------
 if [ "$EUID" -ne 0 ]; then
-    echo "Run as root (or use sudo)"
+    echo "Run as root (or sudo)"
     exit 1
 fi
 
 # -----------------------------
-# TARGET USER (AUTO DETECT)
+# TARGET USER (CURRENT LOGIN USER)
 # -----------------------------
 TARGET_USER="${SUDO_USER:-root}"
 
@@ -44,7 +44,7 @@ else
 fi
 
 # -----------------------------
-# SSH DIR SETUP
+# SSH SETUP
 # -----------------------------
 HOME_DIR=$(eval echo "~$TARGET_USER")
 
@@ -57,7 +57,7 @@ chmod 600 "$AUTH_KEYS"
 chown -R "$TARGET_USER:$TARGET_USER" "$HOME_DIR/.ssh"
 
 # -----------------------------
-# FETCH KEYS
+# DOWNLOAD KEYS
 # -----------------------------
 TMP_DIR="/tmp/keys_repo"
 rm -rf "$TMP_DIR"
@@ -79,9 +79,9 @@ if [ -z "$KEY_DIR" ]; then
 fi
 
 # -----------------------------
-# APPLY KEYS (NO USER LOGIC)
+# APPLY KEYS
 # -----------------------------
-echo "[+] Installing all keys to $TARGET_USER..."
+echo "[+] Installing SSH keys..."
 
 ADDED=0
 
@@ -101,18 +101,13 @@ done
 echo "[+] Added $ADDED key(s)"
 
 # -----------------------------
-# SSH SERVICE FIX (ALMA/DEBIAN SAFE)
+# SAFE SSH RESTART (FIXED)
 # -----------------------------
 echo "[+] Restarting SSH..."
 
-if systemctl list-unit-files | grep -q sshd; then
-    SVC="sshd"
-else
-    SVC="ssh"
-fi
-
+# Alma / RHEL / Debian safe approach
 if sshd -t 2>/dev/null; then
-    systemctl restart "$SVC"
+    systemctl restart sshd 2>/dev/null || systemctl restart ssh
     echo "[+] SSH ready 🔥"
 else
     echo "SSH config invalid - NOT restarting"
