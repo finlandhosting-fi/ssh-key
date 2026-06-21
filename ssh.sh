@@ -62,7 +62,7 @@ mkdir -p "$TMP_DIR"
 
 echo "[+] Fetching keys repo..."
 
-curl -fsSL https://github.com/YOURUSER/YOURREPO/archive/refs/heads/main.tar.gz | tar -xz -C "$TMP_DIR"
+curl -fsSL https://github.com/finlandhosting-fi/ssh-key/archive/refs/heads/main.tar.gz | tar -xz -C "$TMP_DIR"
 
 KEY_DIR=$(find "$TMP_DIR" -type d -name "keys" | head -n 1)
 
